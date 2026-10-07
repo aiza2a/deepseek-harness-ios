@@ -36,6 +36,10 @@ jobs:
           export PATH="/opt/homebrew/opt/lld/bin:/opt/homebrew/opt/llvm/bin:/opt/homebrew/bin:$PATH"
           export ISH_LIBARCHIVE_PREFIX="/opt/homebrew/opt/libarchive"
           ./Scripts/build-ish-sandbox.sh all
+          # Record fresh artifact checksums so the Xcode audit build phase passes
+          ./Scripts/record-artifact.sh Vendor/OpenMinisISH/Artifacts/HarnessISH.xcframework.zip ishArm64
+          ./Scripts/record-artifact.sh Vendor/OpenMinisISH/Artifacts/RootfsPatch.bundle.zip ishArm64
+          ./Scripts/record-artifact.sh Vendor/OpenMinisISH/Artifacts/alpine-rootfs.zip openminis
 
       - name: Regenerate Xcode project
         run: |
