@@ -877,7 +877,7 @@ struct SystemDeviceLocationProvider: DeviceLocationProviding {
 }
 
 @MainActor
-private final class LocationRequestBridge: NSObject, @MainActor CLLocationManagerDelegate {
+private final class LocationRequestBridge: NSObject, @preconcurrency CLLocationManagerDelegate {
     private var continuation: CheckedContinuation<DeviceLocationReading, Error>?
     private var manager: CLLocationManager?
     private var timeoutTask: Task<Void, Never>?
