@@ -1,0 +1,67 @@
+name: Build Harness Mobile IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/deepseek-parity
+    paths-ignore:
+      - 'README.md'
+      - 'Docs/**'
+      - 'AGENTS.md'
+
+jobs:
+  build-ipa:
+    name: Build Unsigned IPA
+    runs-on: macos-15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup build toolchain
+        run: |
+          brew install llvm ninja libarchive meson
+          # Ensure LLVM clang and ld.lld are first in PATH
+          echo "/opt/homebrew/opt/llvm/bin" >> $GITHUB_PATH
+
+      - name: Fetch upstream dependencies
+        run: |
+          chmod +x Scripts/*.sh
+          ./Scripts/fetch-upstreams.sh
+
+      - name: Build iSH sandbox components
+        run: |
+          export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+          ./Scripts/build-ish-sandbox.sh all
+
+      - name: Regenerate Xcode project
+        run: |
+          ./Scripts/regenerate-project.sh
+
+      - name: Build iOS App (.app)
+        run: |
+          xcodebuild build \
+            -project HarnessMobile.xcodeproj \
+            -scheme HarnessMobile \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath /tmp/DerivedData \
+            ARCHS=arm64 \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package Unsigned IPA
+        run: |
+          mkdir -p build/Payload
+          cp -R /tmp/DerivedData/Build/Products/Release-iphoneos/HarnessMobile.app build/Payload/
+          cd build
+          zip -r -y HarnessMobile.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HarnessMobile-unsigned
+          path: build/HarnessMobile.ipa
