@@ -13,9 +13,9 @@ if [ ! -r "$audit_input_list" ]; then
   exit 1
 fi
 
-# Locate ripgrep: prefer PATH, then the codex cask copy installed on this machine.
+# Locate ripgrep: prefer PATH, then Homebrew or standard locations.
 if ! command -v rg >/dev/null 2>&1; then
-  for candidate_dir in /opt/homebrew/Caskroom/codex/*/codex-path; do
+  for candidate_dir in /opt/homebrew/bin /usr/local/bin /opt/homebrew/Caskroom/codex/*/codex-path; do
     if [ -x "$candidate_dir/rg" ]; then
       PATH="$candidate_dir:$PATH"
       export PATH
