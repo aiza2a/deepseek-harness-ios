@@ -20,9 +20,11 @@ jobs:
 
       - name: Setup build toolchain
         run: |
-          brew install llvm ninja libarchive meson
-          # Ensure LLVM clang and ld.lld are first in PATH
+          brew install llvm lld ninja libarchive meson
+          # Ensure Homebrew LLVM, LLD, and tools are in PATH
           echo "/opt/homebrew/opt/llvm/bin" >> $GITHUB_PATH
+          echo "/opt/homebrew/opt/lld/bin" >> $GITHUB_PATH
+          echo "/opt/homebrew/bin" >> $GITHUB_PATH
 
       - name: Fetch upstream dependencies
         run: |
@@ -31,7 +33,8 @@ jobs:
 
       - name: Build iSH sandbox components
         run: |
-          export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+          export PATH="/opt/homebrew/opt/lld/bin:/opt/homebrew/opt/llvm/bin:/opt/homebrew/bin:$PATH"
+          export ISH_LIBARCHIVE_PREFIX="/opt/homebrew/opt/libarchive"
           ./Scripts/build-ish-sandbox.sh all
 
       - name: Regenerate Xcode project
