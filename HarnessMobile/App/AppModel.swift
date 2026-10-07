@@ -7884,40 +7884,29 @@ final class AppModel: ObservableObject, SessionControlling, SettingsControlling,
         }
         if query.scope == .pluginHost || query.scope == .errors || query.scope == .full {
             let stderr = liveHostDiagnostics?.stderrTail ?? ""
-            result["pluginHost"] = .object([
-                "state": .string(diagnosticHostStateDescription),
-                "transport": .string(
-                    liveHostDiagnostics.map {
-                        Self.pluginHostTransportDescription($0.state)
-                    } ?? "none"
-                ),
-                "pendingRequests": .number(Double(liveHostDiagnostics?.pendingRequestCount ?? 0)),
-                "outboundQueuedBytes": .number(
-                    Double(liveHostDiagnostics?.outboundQueuedBytes ?? 0)
-                ),
-                "outboundWriteInFlight": .bool(
-                    liveHostDiagnostics?.outboundWriteInFlight ?? false
-                ),
-                "rejectedWrites": .number(Double(liveHostDiagnostics?.rejectedWriteCount ?? 0)),
-                "lastTransportFailure": .string(
-                    liveHostDiagnostics?.lastTransportFailure ?? "none"
-                ),
-                "stderrTail": .string(
-                    HarnessTraceRedactor.string(
-                        String(stderr.suffix(16 * 1_024)),
-                        maximumUTF8Bytes: 16 * 1_024
-                    )
-                ),
-                "inventory": Self.redactedDiagnosticJSON(
-                    Array(ishPluginHostInventory.suffix(query.limit))
-                ),
-                "packageVersions": Self.redactedDiagnosticJSON(ishPluginHostPackages),
-                "nativeClientSynchronizationFailures": .array(
-                    nativeClientErrors.suffix(query.limit).map {
-                        HarnessTraceRedactor.json($0, maximumDepth: 12)
-                    }
-                )
-            ])
+            var hostObj: [String: JSONValue] = [:]
+            hostObj["state"] = .string(diagnosticHostStateDescription)
+            let transportStr = liveHostDiagnostics.map {
+                Self.pluginHostTransportDescription($0.state)
+            } ?? "none"
+            hostObj["transport"] = .string(transportStr)
+            hostObj["pendingRequests"] = .number(Double(liveHostDiagnostics?.pendingRequestCount ?? 0))
+            hostObj["outboundQueuedBytes"] = .number(Double(liveHostDiagnostics?.outboundQueuedBytes ?? 0))
+            hostObj["outboundWriteInFlight"] = .bool(liveHostDiagnostics?.outboundWriteInFlight ?? false)
+            hostObj["rejectedWrites"] = .number(Double(liveHostDiagnostics?.rejectedWriteCount ?? 0))
+            hostObj["lastTransportFailure"] = .string(liveHostDiagnostics?.lastTransportFailure ?? "none")
+            let redactedStderr = HarnessTraceRedactor.string(
+                String(stderr.suffix(16 * 1_024)),
+                maximumUTF8Bytes: 16 * 1_024
+            )
+            hostObj["stderrTail"] = .string(redactedStderr)
+            hostObj["inventory"] = Self.redactedDiagnosticJSON(Array(ishPluginHostInventory.suffix(query.limit)))
+            hostObj["packageVersions"] = Self.redactedDiagnosticJSON(ishPluginHostPackages)
+            let nativeClientFailures = nativeClientErrors.suffix(query.limit).map {
+                HarnessTraceRedactor.json($0, maximumDepth: 12)
+            }
+            hostObj["nativeClientSynchronizationFailures"] = .array(nativeClientFailures)
+            result["pluginHost"] = .object(hostObj)
         }
         if query.scope == .compilation || query.scope == .errors || query.scope == .full {
             result["nativeCompilation"] = nativePluginCompilationTrace.map {
