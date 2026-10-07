@@ -9,7 +9,7 @@ import AVFoundation
 @preconcurrency import CoreBluetooth
 import CoreLocation
 import HealthKit
-import MapKit
+@preconcurrency import MapKit
 import MediaPlayer
 import Photos
 import Speech
