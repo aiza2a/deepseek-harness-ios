@@ -44,7 +44,7 @@ protocol BackgroundLocationKeepAlivePlatform: AnyObject {
 
 #if os(iOS)
 @MainActor
-private final class SystemBackgroundLocationKeepAlivePlatform: NSObject, BackgroundLocationKeepAlivePlatform, @MainActor CLLocationManagerDelegate {
+private final class SystemBackgroundLocationKeepAlivePlatform: NSObject, BackgroundLocationKeepAlivePlatform, @preconcurrency CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private var activitySession: CLBackgroundActivitySession?
     var onAuthorizationChanged: ((BackgroundLocationAuthorization) -> Void)?
